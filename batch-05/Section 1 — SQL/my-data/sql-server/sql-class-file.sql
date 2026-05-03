@@ -291,3 +291,61 @@ select product_name, brand_name from production.brands as b
 inner join production.products as p on b.brand_id = p.brand_id;
 
 -- class 03/05/2026
+-- LEFT JOIN
+SELECT * 
+FROM 
+	production.products p
+JOIN sales.order_items oi --4722 records
+	ON p.product_id = oi.product_id --only join means inner join
+
+SELECT 
+	product_id, product_name
+FROM 
+	production.products p
+left JOIN sales.order_items oi
+	ON p.product_id = oi.product_id
+ORDER BY order_id;
+
+--product_name, order_id, order_date, product_id
+--retrieve these 4 columns using left join
+SELECT 
+    p.product_name,
+    p.product_id,
+    o.order_id,
+    o.order_date
+FROM 
+    production.products p
+LEFT JOIN 
+    sales.order_items oi ON p.product_id = oi.product_id
+LEFT JOIN 
+    sales.orders o ON oi.order_id = o.order_id;
+-- TIP: we first define right table and then left table
+SELECT
+	p.product_name,
+	oi.order_id
+FROM
+	sales.order_items oi --left table
+RIGHT JOIN
+	production.products p ON oi.product_id = p.product_id--right table
+
+SELECT *
+FROM
+	sales.staffs s
+RIGHT JOIN
+	sales.stores ss ON s.store_id = ss.store_id;
+
+-- cross join
+-- syntax
+-- SELECT select_list
+-- FROM table_t1
+-- CROSS JOIN table_t2;
+
+SELECT *
+FROM 
+	sales.order_items
+CROSS JOIN 
+	production.products
+
+-- SELF JOIN [alias is very imp]
+select * from sales.staffs s1 inner join sales.staffs s2 on s1.staff_id = s2.manager_id
+
