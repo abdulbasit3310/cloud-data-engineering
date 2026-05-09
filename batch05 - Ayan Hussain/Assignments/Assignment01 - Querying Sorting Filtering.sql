@@ -14,9 +14,9 @@
 -- ============================================================
 
 -- Write your query below:
-
-
-
+SELECT first_name, last_name, city, phone 
+FROM sales.customers
+WHERE state = 'CA' AND phone IS NOT NULL;
 
 -- ============================================================
 --  Question 2 — ORDER BY (Multiple Columns)
@@ -27,9 +27,9 @@
 -- ============================================================
 
 -- Write your query below:
-
-
-
+SELECT product_id, product_name, model_year, list_price
+FROM production.products
+ORDER BY model_year DESC, list_price ASC;
 
 -- ============================================================
 --  Question 3 — TOP N & TOP PERCENT
@@ -41,12 +41,14 @@
 -- ============================================================
 
 -- Part a:
-
+SELECT TOP 5 product_name, list_price
+FROM production.products
+ORDER BY list_price DESC
 
 -- Part b:
-
-
-
+SELECT TOP 5 PERCENT *
+FROM production.products
+ORDER BY list_price ASC --Returned 17 rows
 
 -- ============================================================
 --  Question 4 — OFFSET & FETCH (Pagination)
@@ -59,15 +61,25 @@
 -- ============================================================
 
 -- Page 1:
-
+SELECT * 
+FROM production.products 
+ORDER BY list_price DESC 
+OFFSET 0 ROWS 
+FETCH NEXT 10 ROWS ONLY;
 
 -- Page 2:
-
+SELECT * 
+FROM production.products 
+ORDER BY list_price DESC 
+OFFSET 10 ROWS 
+FETCH NEXT 10 ROWS ONLY;
 
 -- Page 3:
-
-
-
+SELECT * 
+FROM production.products 
+ORDER BY list_price DESC 
+OFFSET 20 ROWS 
+FETCH NEXT 10 ROWS ONLY;
 
 -- ============================================================
 --  Question 5 — DISTINCT
@@ -81,15 +93,19 @@
 -- ============================================================
 
 -- Part a:
-
+SELECT DISTINCT state
+FROM sales.customers 
+ORDER BY state;
 
 -- Part b:
-
+SELECT DISTINCT state, city
+FROM sales.customers
+ORDER BY state ASC, city ASC;
 
 -- Part c:
-
-
-
+SELECT DISTINCT model_year
+FROM production.products
+ORDER BY model_year --COUNT = 4 years
 
 -- ============================================================
 --  Question 6 — Logical Operators (AND / OR)
@@ -103,3 +119,10 @@
 -- ============================================================
 
 -- Write your query below:
+SELECT product_id, product_name, brand_id, category_id, list_price
+FROM production.products
+WHERE (list_price BETWEEN 500 AND 1500) 
+AND model_year IN ('2019','2020')
+ORDER BY list_price ASC;
+
+--this query shows empty columns because there is no such prices in years 2019, 2020
