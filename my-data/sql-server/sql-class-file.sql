@@ -349,3 +349,64 @@ CROSS JOIN
 -- SELF JOIN [alias is very imp]
 select * from sales.staffs s1 inner join sales.staffs s2 on s1.staff_id = s2.manager_id
 
+-- class 09/05/2026
+
+-- GROUP BY
+-- Grouping / categorizing same values
+
+-- SYNTAX
+-- SELECT column1, aggregate_function(column2)
+-- FROM table_name
+-- WHERE condition
+-- GROUP BY column1
+-- ORDER BY column1;
+
+-- date functions
+-- year(date), day, month
+SELECT 
+	customer_id, year(order_date) as order_year
+FROM
+	sales.orders
+WHERE
+	customer_id in (1,2)
+GROUP BY
+	customer_id, year(order_date)
+-- group by always work with aggregate functions 
+
+-- aggregate functions 
+
+select 
+	customer_id,
+	count(order_date) as order_count,
+	year(order_date) as order_year
+from
+	sales.orders
+group by
+	customer_id,
+	year(order_date)
+
+-- query: city wise count of customers
+
+-- query: net value of every order id
+
+-- aggregate grouping
+
+-- HAVING
+
+-- min and max value in every category
+
+-- query: category wise average price ranging between 500 till 1k
+
+-- SUBQUERY
+-- sub queries limit -> 32 sub queries in one main query
+
+-- query: retrieve those products whose prices are greater than avg prices using subquery
+
+ select *
+ from production.products
+ where category_id in (select category_id from production.categories
+ where category_name in ('Comfort Bicycles','Electric Bikes'
+ ))
+
+--query: find product details where product stocks quantity > 30
+
