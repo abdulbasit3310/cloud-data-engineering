@@ -410,3 +410,22 @@ group by
 
 --query: find product details where product stocks quantity > 30
 
+-- 16/05/2026 [ABSENT]
+-- studied set operators and cte's
+
+-- CLASS 17/05/2026
+
+-- constraints
+
+-- primary key [unique id that identifies each row uniquely, not null]
+-- foreign key
+-- not null
+-- unique 
+-- check
+
+-- composite key -- more than one column combined
+
+-- alter 
+
+-- foreign key
+
