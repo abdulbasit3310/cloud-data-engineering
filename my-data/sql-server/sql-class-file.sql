@@ -429,3 +429,36 @@ group by
 
 -- foreign key
 
+-- CLASS 23/05/2026
+create table production.parts(
+	part_id int not null,
+	part_name varchar(100)
+);
+
+insert into	
+	production.parts(part_id,part_name)
+values
+	(1,'frame'),
+	(2, 'head tube'),
+	(3, 'handlebar grip'),
+	(4, 'shock absorber'),
+	(5, 'fork')
+
+select * from production.parts
+
+select 
+	part_id,
+	part_name
+from 
+	production.parts
+where
+	part_id=5
+
+alter table production.parts
+add primary key (part_id);
+
+drop table production.parts;
+
+create clustered index ix_parts_id
+on production.parts (part_id);
+
