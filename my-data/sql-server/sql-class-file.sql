@@ -462,3 +462,135 @@ drop table production.parts;
 create clustered index ix_parts_id
 on production.parts (part_id);
 
+-- CLASS 24/05/2026
+
+-- COALESCE
+SELECT 
+    COALESCE(NULL, 'Hi', 'Hello', NULL) result; --hi
+
+SELECT 
+    COALESCE(NULL, NULL, 'Hello', NULL) result; --hello
+
+SELECT 
+    COALESCE(NULL, NULL, NULL, NULL) result; -- error
+
+SELECT 
+    COALESCE(NULL, NULL, 100, 200) result;
+
+SELECT 
+    first_name, 
+    last_name, 
+    phone, 
+    email
+FROM 
+    sales.customers
+ORDER BY 
+    first_name, 
+    last_name;
+
+-- WINDOW FUNCTIONS [INTERVIEW IMP]
+-- SYNTAX
+
+
+-- ROW NUMBER() OVER()
+-- [partition by partition_expresssion,...]
+-- order by sort expression [asc | desc]
+
+delete from sales.customers
+where 
+
+-- RANK
+-- RANK() OVER (
+-- [PARTITION BY partition_expression, ... ]
+--  ORDER BY sort_expression [ASC | DESC], ...
+)
+
+-- CLASS 30/05/2026
+
+-- INSERT
+-- SYNTAX
+-- INSERT INTO table_name (column_list) VALUES (value_list)
+
+select * from production.brands;
+
+update production.brands set brand_name = 'Elektra' where brand_id = 1;
+
+CREATE TABLE sales.category (
+    category_id INT PRIMARY KEY,
+    category_name VARCHAR(255) NOT NULL,
+    amount DECIMAL(10 , 2 )
+);
+
+INSERT INTO sales.category(category_id, category_name, amount)
+VALUES(1,'Children Bicycles',15000),
+    (2,'Comfort Bicycles',25000),
+    (3,'Cruisers Bicycles',13000),
+    (4,'Cyclocross Bicycles',10000);
+
+
+CREATE TABLE sales.category_staging (
+    category_id INT PRIMARY KEY,
+    category_name VARCHAR(255) NOT NULL,
+    amount DECIMAL(10 , 2 )
+);
+
+
+INSERT INTO sales.category_staging(category_id, category_name, amount)
+VALUES(1,'Children Bicycles',15000),
+    (3,'Cruisers Bicycles',13000),
+    (4,'Cyclocross Bicycles',20000),
+    (5,'Electric Bikes',10000),
+    (6,'Mountain Bikes',10000);
+
+MERGE sales.category t 
+    USING sales.category_staging s
+ON (s.category_id = t.category_id)
+WHEN MATCHED
+    THEN UPDATE SET 
+        t.category_name = s.category_name,
+        t.amount = s.amount
+WHEN NOT MATCHED BY TARGET 
+    THEN INSERT (category_id, category_name, amount)
+         VALUES (s.category_id, s.category_name, s.amount)
+WHEN NOT MATCHED BY SOURCE 
+    THEN DELETE;
+
+select * from sales.category
+
+CREATE TABLE invoices (
+  id int IDENTITY PRIMARY KEY,
+  customer_id int NOT NULL,
+  total decimal(10, 2) NOT NULL DEFAULT 0 CHECK (total >= 0)
+);
+
+CREATE TABLE invoice_items (
+  id int,
+  invoice_id int NOT NULL,
+  item_name varchar(100) NOT NULL,
+  amount decimal(10, 2) NOT NULL CHECK (amount >= 0),
+  tax decimal(4, 2) NOT NULL CHECK (tax >= 0),
+  PRIMARY KEY (id, invoice_id),
+  FOREIGN KEY (invoice_id) REFERENCES invoices (id)
+	ON UPDATE CASCADE
+	ON DELETE CASCADE
+);
+
+BEGIN TRANSACTION;
+
+INSERT INTO invoices (customer_id, total)
+VALUES (100, 0);
+
+INSERT INTO invoice_items (id, invoice_id, item_name, amount, tax)
+VALUES (10, 1, 'Keyboard', 70, 0.08),
+       (20, 1, 'Mouse', 50, 0.08);
+
+UPDATE invoices
+SET total = (SELECT
+  SUM(amount * (1 + tax))
+FROM invoice_items
+WHERE invoice_id = 1);
+
+COMMIT;
+
+select * from invoices;
+
