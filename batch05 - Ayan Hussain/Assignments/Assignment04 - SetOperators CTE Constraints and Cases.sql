@@ -17,14 +17,26 @@
 -- — both staff members and customers.
 -- Build a unified list showing full name and email for all of them.
 -- Make sure no one is accidentally listed twice.
+SELECT first_name + ' ' + last_name AS full_name, email
+FROM sales.staffs
 
+UNION
+
+SELECT first_name + ' ' + last_name AS full_name, email
+FROM sales.customers;
 
 
 -- Q2.
 -- The logistics team wants to know which states have BOTH
 -- a store location AND customers living there.
 -- Find those states.
+SELECT state
+FROM sales.stores
 
+INTERSECT
+
+SELECT state
+FROM sales.customers;
 
 
 -- Q3.
@@ -32,7 +44,14 @@
 -- in the year 2018.
 -- Find the store_ids that appear in sales.stores but did NOT
 -- receive any orders in 2018.
+SELECT store_id
+FROM sales.stores
 
+EXCEPT
+
+SELECT store_id
+FROM sales.orders
+WHERE YEAR(order_date) = 2018;
 
 
 -- ============================================================
@@ -44,7 +63,22 @@
 -- For each category, find all products whose list_price is
 -- higher than the average list_price of their own category.
 -- Show category_id, product_name, list_price, and the category average.
-
+WITH CategoryAvg AS (
+    SELECT 
+        category_id,
+        AVG(list_price) AS avg_price
+    FROM production.products
+    GROUP BY category_id
+)
+SELECT 
+    p.category_id,
+    p.product_name,
+    p.list_price,
+    ca.avg_price AS category_average
+FROM production.products p
+JOIN CategoryAvg ca
+    ON p.category_id = ca.category_id
+WHERE p.list_price > ca.avg_price;
 
 
 -- Q5.
@@ -52,7 +86,21 @@
 -- Find all staff members whose order count is higher than
 -- the average order count across all staff.
 -- Show staff_id and their order_count.
-
+WITH StaffOrders AS (
+    SELECT 
+        staff_id,
+        COUNT(*) AS order_count
+    FROM sales.orders
+    GROUP BY staff_id
+)
+SELECT 
+    staff_id,
+    order_count
+FROM StaffOrders
+WHERE order_count > (
+    SELECT AVG(order_count * 1.0)
+    FROM StaffOrders
+);
 
 
 -- Q6.
@@ -61,7 +109,19 @@
 -- Then find only the years where a store's revenue
 -- exceeded $1,000,000.
 -- Show store_id, year, and total_revenue.
-
+SELECT 
+    o.store_id, 
+    YEAR(o.order_date) AS year, 
+    SUM(oi.quantity * oi.list_price * (1 - oi.discount)) AS total_revenue
+FROM 
+    sales.orders o
+INNER JOIN 
+    sales.order_items oi ON o.order_id = oi.order_id
+GROUP BY 
+    o.store_id, 
+    YEAR(o.order_date)
+HAVING 
+    SUM(oi.quantity * oi.list_price * (1 - oi.discount)) > 1000000;
 
 
 -- ============================================================
@@ -79,6 +139,17 @@
 --   - If a customer is deleted, their loyalty card record should also be deleted.
 --
 -- Starter table (add your constraints here):
+CREATE TABLE sales.loyalty_cards (
+    card_number   INT PRIMARY KEY,
+    customer_id   INT,
+    points        INT CHECK (points >= 0),
+    tier          VARCHAR(10) CHECK (tier IN ('Bronze', 'Silver', 'Gold')),
+    join_date     DATE NOT NULL,
+    FOREIGN KEY (customer_id) 
+        REFERENCES sales.customers(customer_id) 
+        ON DELETE CASCADE
+);
+GO
 --
 -- CREATE TABLE sales.loyalty_cards (
 --     card_number   INT,
@@ -90,16 +161,14 @@
 --
 -- Once the table is created, run these inserts to verify your constraints work:
 --
--- INSERT INTO sales.loyalty_cards VALUES (1001, 1,  500,  'Gold',   '2024-01-15');
--- INSERT INTO sales.loyalty_cards VALUES (1002, 2,  150,  'Silver', '2024-03-22');
--- INSERT INTO sales.loyalty_cards VALUES (1003, 3,  0,    'Bronze', '2024-06-01');
+INSERT INTO sales.loyalty_cards VALUES (1001, 1,  500,  'Gold',   '2024-01-15');
+INSERT INTO sales.loyalty_cards VALUES (1002, 2,  150,  'Silver', '2024-03-22');
+INSERT INTO sales.loyalty_cards VALUES (1003, 3,  0,    'Bronze', '2024-06-01');
 --
 -- Also try these to confirm your constraints REJECT bad data:
--- INSERT INTO sales.loyalty_cards VALUES (1001, 4,  100,  'Gold',   '2024-07-01'); -- duplicate card_number
--- INSERT INTO sales.loyalty_cards VALUES (1004, 1,  -50,  'Silver', '2024-08-01'); -- negative points
--- INSERT INTO sales.loyalty_cards VALUES (1005, 5,  200,  'Diamond','2024-09-01'); -- invalid tier
-
-
+INSERT INTO sales.loyalty_cards VALUES (1001, 4,  100,  'Gold',   '2024-07-01'); -- duplicate card_number
+INSERT INTO sales.loyalty_cards VALUES (1004, 1,  -50,  'Silver', '2024-08-01'); -- negative points
+INSERT INTO sales.loyalty_cards VALUES (1005, 5,  200,  'Diamond','2024-09-01'); -- invalid tier
 
 -- Q8.
 -- The operations team realized that some orders in the database have
@@ -109,20 +178,24 @@
 --
 -- Run this setup first:
 --
--- CREATE TABLE test_orders (
---     order_id      INT PRIMARY KEY,
---     order_date    DATE NOT NULL,
---     shipped_date  DATE
--- );
+CREATE TABLE test_orders (
+     order_id      INT PRIMARY KEY,
+     order_date    DATE NOT NULL,
+     shipped_date  DATE 
+);
 --
--- INSERT INTO test_orders VALUES (1, '2024-01-10', '2024-01-13');
--- INSERT INTO test_orders VALUES (2, '2024-02-05', '2024-02-07');
--- INSERT INTO test_orders VALUES (3, '2024-03-01', NULL);
+INSERT INTO test_orders VALUES (1, '2024-01-10', '2024-01-13');
+INSERT INTO test_orders VALUES (2, '2024-02-05', '2024-02-07');
+INSERT INTO test_orders VALUES (3, '2024-03-01', NULL);
 --
 -- Now add the constraint using ALTER TABLE (do not recreate the table).
+ALTER TABLE test_orders 
+ADD CONSTRAINT chk_logical_dates CHECK (shipped_date >= order_date);
+GO
+
 -- After adding it, test with:
--- INSERT INTO test_orders VALUES (4, '2024-04-10', '2024-04-08'); -- should FAIL
--- INSERT INTO test_orders VALUES (5, '2024-04-10', '2024-04-15'); -- should PASS
+INSERT INTO test_orders VALUES (4, '2024-04-10', '2024-04-08'); -- should FAIL = FAILED
+INSERT INTO test_orders VALUES (5, '2024-04-10', '2024-04-15'); -- should PASS = PASSED
 
 
 
@@ -138,7 +211,19 @@
 --   - 'Delayed'  — shipped after 5 days
 --   - 'Pending'  — not yet shipped (shipped_date is NULL)
 -- Show order_id, order_date, shipped_date, and shipping_speed.
-
+SELECT 
+    order_id, 
+    order_date, 
+    shipped_date,
+    CASE
+        WHEN shipped_date IS NULL THEN 'Pending'
+        
+        WHEN DATEDIFF(day, order_date, shipped_date) <= 2 THEN 'Fast'
+        WHEN DATEDIFF(day, order_date, shipped_date) <= 5 THEN 'Normal'
+        ELSE 'Delayed'
+    END AS shipping_speed
+FROM 
+    sales.orders;
 
 
 -- Q10.
@@ -151,6 +236,21 @@
 -- Show store_id, product_id, quantity, and stock_status.
 -- Sort by store_id, then quantity ascending.
 
+SELECT 
+    store_id, 
+    product_id, 
+    quantity,
+    CASE 
+        WHEN quantity = 0 THEN 'Out of Stock'
+        WHEN quantity <= 10 THEN 'Low Stock'
+        WHEN quantity <= 50 THEN 'Sufficient'
+        ELSE 'Well Stocked'
+    END AS stock_status
+FROM 
+    production.stocks
+ORDER BY 
+    store_id ASC, 
+    quantity ASC;
 
 
 -- ============================================================
